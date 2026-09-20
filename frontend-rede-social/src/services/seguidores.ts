@@ -39,3 +39,14 @@ export async function contarSeguidores(empresaId: string): Promise<number> {
   if (error) throw new Error(error.message);
   return count ?? 0;
 }
+
+/** Quantidade de empresas que o usuário (cliente) está seguindo. */
+export async function contarSeguindo(seguidorId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('seguidores_empresa')
+    .select('*', { count: 'exact', head: true })
+    .eq('seguidor_id', seguidorId);
+
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}

@@ -120,6 +120,58 @@ export async function criarPost(dados: {
   if (error) throw new Error(error.message);
 }
 
+/** Publicações criadas pelo próprio usuário (aba "Minhas Publicações" da Área do Usuário). */
+export async function buscarPostsPorAutor(autorId: string, usuarioId: string | null): Promise<Post[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(
+      `*,
+      autor:profiles!posts_autor_id_fkey(*),
+      empresa:profiles!posts_empresa_id_fkey(*),
+      curtidas(count)`
+    )
+    .eq('autor_id', autorId)
+    .order('criado_em', { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  let idsCurtidos = new Set<string>();
+  if (usuarioId && data && data.length > 0) {
+    const { data: curtidas } = await supabase.from('curtidas').select('post_id').eq('user_id', usuarioId);
+    idsCurtidos = new Set((curtidas ?? []).map((c) => c.post_id));
+  }
+
+  return (data ?? []).map((linha) => mapearPost(linha, idsCurtidos));
+}
+
+/** Publicações que o usuário curtiu (aba "Postagens Curtidas" da Área do Usuário). */
+export async function buscarPostsCurtidosPorMim(usuarioId: string): Promise<Post[]> {
+  const { data: curtidas, error: erroCurtidas } = await supabase
+    .from('curtidas')
+    .select('post_id')
+    .eq('user_id', usuarioId);
+  if (erroCurtidas) throw new Error(erroCurtidas.message);
+
+  const idsPosts = (curtidas ?? []).map((c) => c.post_id);
+  if (idsPosts.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select(
+      `*,
+      autor:profiles!posts_autor_id_fkey(*),
+      empresa:profiles!posts_empresa_id_fkey(*),
+      curtidas(count)`
+    )
+    .in('id', idsPosts)
+    .order('criado_em', { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  const idsCurtidosSet = new Set(idsPosts);
+  return (data ?? []).map((linha) => mapearPost(linha, idsCurtidosSet));
+}
+
 export async function buscarEmpresas(termo: string) {
   if (!termo.trim()) return [];
   const { data, error } = await supabase
