@@ -1,8 +1,3 @@
-import Constants from 'expo-constants';
-import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
-
 import { supabase } from '@/src/services/supabase';
 import { Notificacao } from '@/src/types';
 
@@ -42,7 +37,11 @@ export async function contarNaoLidas(usuarioId: string): Promise<number> {
 }
 
 export async function marcarComoLida(notificacaoId: string) {
-  const { error } = await supabase.from('notificacoes').update({ lida: true }).eq('id', notificacaoId);
+  const { error } = await supabase
+    .from('notificacoes')
+    .update({ lida: true })
+    .eq('id', notificacaoId);
+
   if (error) throw new Error(error.message);
 }
 
@@ -56,10 +55,12 @@ export async function marcarTodasComoLidas(usuarioId: string) {
   if (error) throw new Error(error.message);
 }
 
-export function ouvirNovasNotificacoes(usuarioId: string, aoReceber: (n: Notificacao) => void) {
-  // Nome de canal único por instância para evitar choque de listeners concorrentes
+export function ouvirNovasNotificacoes(
+  usuarioId: string,
+  aoReceber: (n: Notificacao) => void
+) {
   const channelName = `notificacoes:${usuarioId}:${Date.now()}`;
-  
+
   const canal = supabase
     .channel(channelName)
     .on(
@@ -78,59 +79,4 @@ export function ouvirNovasNotificacoes(usuarioId: string, aoReceber: (n: Notific
   return () => {
     supabase.removeChannel(canal);
   };
-}
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
-export async function registrarPushToken(usuarioId: string) {
-  if (!Device.isDevice) return;
-
-  const permissaoAtual = await Notifications.getPermissionsAsync();
-  let status = permissaoAtual.status;
-
-  if (status !== 'granted') {
-    const pedido = await Notifications.requestPermissionsAsync();
-    status = pedido.status;
-  }
-  if (status !== 'granted') return;
-
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.DEFAULT,
-    });
-  }
-
-  try {
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
-    
-    if (!projectId) {
-      console.warn('EAS projectId não configurado no app.json. Ignorando push token.');
-      return;
-    }
-
-    const tokenResponse = await Notifications.getExpoPushTokenAsync({ projectId });
-    const expoPushToken = tokenResponse.data;
-
-    const { error } = await supabase
-      .from('push_tokens')
-      .upsert(
-        { usuario_id: usuarioId, expo_push_token: expoPushToken, atualizado_em: new Date().toISOString() },
-        { onConflict: 'expo_push_token' }
-      );
-
-    if (error) {
-      console.error('Erro ao salvar push token:', error.message);
-    }
-  } catch (error) {
-    console.warn('Não foi possível obter o Expo push token:', error);
-  }
 }
