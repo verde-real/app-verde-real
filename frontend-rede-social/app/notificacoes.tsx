@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -79,19 +78,6 @@ export default function NotificacoesScreen() {
         unsubscribe();
     };
     }, [usuario?.id]);
-
-  useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const data = response.notification.request.content.data;
-      if (data?.empresaId) {
-        router.push({ pathname: '/empresa/[id]', params: { id: String(data.empresaId) } });
-      } else if (data?.postId) {
-        router.push({ pathname: '/denuncia/[id]', params: { id: String(data.postId) } });
-      }
-    });
-
-    return () => subscription.remove();
-  }, [router]);
 
   async function handleTocar(notificacao: Notificacao) {
     if (!notificacao.lida) {

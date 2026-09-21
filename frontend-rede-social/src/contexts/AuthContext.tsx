@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-import { registrarPushToken } from '@/src/services/notificacoes';
 import { supabase } from '@/src/services/supabase';
 import { Usuario } from '@/src/types';
 
@@ -36,17 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
-  const pushTokenRegistradoRef = useRef<string | null>(null);
 
   async function carregarPerfil(userId: string) {
     const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
     if (error || !data) return null;
     const u = mapearPerfil(data);
-        setUsuario(u);
-    if (pushTokenRegistradoRef.current !== u.id) {
-      pushTokenRegistradoRef.current = u.id;
-      registrarPushToken(u.id).catch((erroPush) => console.warn('Push token:', erroPush));
-    }
+    setUsuario(u);
     return u;
   }
 
