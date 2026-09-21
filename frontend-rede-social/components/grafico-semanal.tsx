@@ -26,7 +26,7 @@ export function GraficoSemanal({ dados }: { dados: AtividadeDia[] }) {
                   styles.barra,
                   {
                     height: altura,
-                    backgroundColor: d.total > 0 ? cores.tint : cores.tintSoft,
+                    backgroundColor: d.total > 0 ? cores.text : cores.border,
                     borderRadius: Radius,
                   },
                 ]}

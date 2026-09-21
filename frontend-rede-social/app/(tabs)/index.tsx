@@ -115,35 +115,109 @@ export default function FeedScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: cores.background }]} edges={['top']}>
-      <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
+  <SafeAreaView
+    style={[styles.container, { backgroundColor: cores.background }]}
+    edges={['top']}
+  >
+    <StatusBar
+      barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'}
+    />
 
-      <View style={[styles.header, { borderBottomColor: cores.border }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Ionicons name="leaf" size={18} color={cores.secondary} />
-          <Text style={[styles.headerTitulo, { color: cores.secondary, fontFamily: Fonts.bold }]}>Verde Real</Text>
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          {usuario && (
-            <Text style={[styles.headerSaudacao, { color: cores.icon, fontFamily: Fonts.mono }]}>
-              OLÁ, {usuario.nome.split(' ')[0].toUpperCase()}
-            </Text>
-          )}
-          {usuario && (
-            <TouchableOpacity
-              onPress={() => router.push('/notificacoes')}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              style={{ position: 'relative' }}>
-              <Ionicons name="notifications-outline" size={22} color={cores.text} />
-              {naoLidas > 0 && (
-                <View style={[styles.badge, { backgroundColor: cores.danger }]}>
-                  <Text style={styles.badgeTexto}>{naoLidas > 9 ? '9+' : naoLidas}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
+    <View style={[styles.header, { borderBottomColor: cores.border }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <Ionicons
+          name="leaf"
+          size={18}
+          color={cores.secondary}
+        />
+
+        <Text
+          style={[
+            styles.headerTitulo,
+            { color: cores.secondary, fontFamily: Fonts.bold }
+          ]}
+        >
+          Verde Real
+        </Text>
       </View>
+
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 14
+        }}
+      >
+        {usuario && (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center'
+            }}
+          >
+            <Text
+              style={[
+                styles.headerSaudacao,
+                { color: cores.icon, fontFamily: Fonts.mono }
+              ]}
+            >
+              OLÁ,{' '}
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/perfil')}
+              hitSlop={{
+                top: 10,
+                bottom: 10,
+                left: 6,
+                right: 6
+              }}
+            >
+              <Text
+                style={[
+                  styles.headerSaudacao,
+                  { color: cores.icon, fontFamily: Fonts.mono }
+                ]}
+              >
+                {usuario.nome.split(' ')[0].toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {usuario && (
+          <TouchableOpacity
+            onPress={() => router.push('/notificacoes')}
+            hitSlop={{
+              top: 10,
+              bottom: 10,
+              left: 10,
+              right: 10
+            }}
+            style={{ position: 'relative' }}
+          >
+            <Ionicons
+              name="notifications-outline"
+              size={22}
+              color={cores.text}
+            />
+
+            {naoLidas > 0 && (
+              <View
+                style={[
+                  styles.badge,
+                  { backgroundColor: cores.danger }
+                ]}
+              >
+                <Text style={styles.badgeTexto}>
+                  {naoLidas > 9 ? '9+' : naoLidas}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
 
       <FlatList
         horizontal
