@@ -221,6 +221,7 @@ export default function FeedScreen() {
 
       <FlatList
         horizontal
+        style={styles.filtrosLista}
         showsHorizontalScrollIndicator={false}
         data={['Todas', ...CATEGORIAS]}
         keyExtractor={(item) => item}
@@ -297,7 +298,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeTexto: { color: '#fff', fontSize: 9, fontWeight: '700' },
-  filtros: { paddingHorizontal: 15, paddingVertical: 10, gap: 8 },
+  filtrosLista: { flexGrow: 0, flexShrink: 0, height: 52 },
+  filtros: { paddingHorizontal: 15, paddingVertical: 10, gap: 8, alignItems: 'center' },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
