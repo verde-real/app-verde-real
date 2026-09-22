@@ -31,6 +31,8 @@ export default function LoginScreen() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [aceitouTermos, setAceitouTermos] = useState(false);
   const [tipo, setTipo] = useState<'cliente' | 'empresa'>('cliente');
   const [carregando, setCarregando] = useState(false);
 
@@ -64,7 +66,14 @@ export default function LoginScreen() {
     setCarregando(true);
     try {
       if (aba === 'cadastro') {
-        const resultado = await cadastrar(nome.trim(), email.trim(), senha, tipo);
+        const resultado = await cadastrar({
+          nome: nome.trim(),
+          email: email.trim(),
+          senha,
+          confirmarSenha,
+          tipo,
+          aceitouTermos,
+        });
         if (resultado.precisaConfirmarEmail) {
           Alert.alert(
             'Quase lá!',
@@ -89,7 +98,6 @@ export default function LoginScreen() {
       <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          {/* Painel escuro de marca — cor FIXA, igual ao site, não muda com o tema do celular */}
           <View style={styles.hero}>
             <View style={styles.heroIconCirculo}>
               <Ionicons name="leaf" size={26} color={Marca.heroBg} />
@@ -101,7 +109,6 @@ export default function LoginScreen() {
             </Text>
           </View>
 
-          {/* Painel do formulário — cor FIXA (branco), igual ao site */}
           <View style={styles.formPainel}>
             <Text style={[styles.formTitulo, { fontFamily: Fonts.bold }]}>Acessar plataforma</Text>
 
@@ -161,6 +168,16 @@ export default function LoginScreen() {
 
             {aba === 'cadastro' && (
               <>
+                <Text style={[styles.rotulo, { fontFamily: Fonts.mono }]}>CONFIRMAR SENHA</Text>
+                <TextInput
+                  style={[styles.input, { fontFamily: Fonts.regular }]}
+                  placeholder="••••••••"
+                  placeholderTextColor={Marca.formIcon}
+                  value={confirmarSenha}
+                  onChangeText={setConfirmarSenha}
+                  secureTextEntry
+                />
+
                 <Text style={[styles.rotulo, { fontFamily: Fonts.mono }]}>TIPO DE CONTA</Text>
                 <View style={styles.tipoGrupo}>
                   <TouchableOpacity
@@ -196,6 +213,20 @@ export default function LoginScreen() {
                     </Text>
                   </TouchableOpacity>
                 </View>
+
+                <TouchableOpacity
+                  style={styles.termosLinha}
+                  onPress={() => setAceitouTermos((atual) => !atual)}
+                  activeOpacity={0.7}>
+                  <Ionicons
+                    name={aceitouTermos ? 'checkbox' : 'square-outline'}
+                    size={20}
+                    color={aceitouTermos ? Marca.tint : Marca.formIcon}
+                  />
+                  <Text style={[styles.termosTexto, { fontFamily: Fonts.regular }]}>
+                    Li e aceito os termos de uso
+                  </Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -268,4 +299,6 @@ const styles = StyleSheet.create({
   },
   tipoBotaoAtivo: { backgroundColor: Marca.tint, borderColor: Marca.tint },
   tipoTexto: { fontSize: 13 },
+  termosLinha: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 4 },
+  termosTexto: { fontSize: 13, color: Marca.formText, flexShrink: 1 },
 });

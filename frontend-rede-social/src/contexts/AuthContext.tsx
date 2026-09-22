@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { DadosCadastro, validarCadastro } from 'verde-real-core';
 
 import { supabase } from '@/src/services/supabase';
 import { Usuario } from '@/src/types';
@@ -8,12 +9,7 @@ interface AuthContextValue {
   token: string | null;
   carregando: boolean;
   entrar: (email: string, senha: string) => Promise<void>;
-  cadastrar: (
-    nome: string,
-    email: string,
-    senha: string,
-    tipo: 'cliente' | 'empresa'
-  ) => Promise<{ precisaConfirmarEmail: boolean }>;
+  cadastrar: (dados: DadosCadastro) => Promise<{ precisaConfirmarEmail: boolean }>;
   recuperarSenha: (email: string) => Promise<void>;
   sair: () => Promise<void>;
   atualizarUsuario: (dados: Partial<Usuario>) => void;
@@ -91,11 +87,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function cadastrar(nome: string, email: string, senha: string, tipo: 'cliente' | 'empresa') {
+  async function cadastrar(dados: DadosCadastro) {
+    const erros = validarCadastro(dados);
+    if (erros.length > 0) {
+      throw new Error(erros[0].mensagem);
+    }
+
     const { data, error } = await supabase.auth.signUp({
-      email: email.toLowerCase().trim(),
-      password: senha,
-      options: { data: { nome: nome.trim(), tipo } },
+      email: dados.email.toLowerCase().trim(),
+      password: dados.senha,
+      options: { data: { nome: dados.nome.trim(), tipo: dados.tipo } },
     });
 
     if (error) {
@@ -121,7 +122,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       throw new Error(error.message);
     }
-    // Por segurança, não revelamos se o email existe ou não.
   }
 
   async function sair() {
