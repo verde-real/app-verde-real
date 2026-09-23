@@ -22,25 +22,11 @@ import {
   marcarTodasComoLidas,
   ouvirNovasNotificacoes,
 } from '@/src/services/notificacoes';
-import { Notificacao, TipoNotificacao } from '@/src/types';
+import { Notificacao } from '@/src/types';
+import { ICONE_IONICONS_POR_TIPO, formatarTempoRelativo } from 'verde-real-core';
 
-const ICONE_POR_TIPO: Record<TipoNotificacao, keyof typeof Ionicons.glyphMap> = {
-  curtida: 'heart',
-  comentario: 'chatbubble',
-  status_denuncia: 'flag',
-  selo_empresa: 'ribbon',
-};
-
-function formatarTempo(criadoEm: string): string {
-  const diffMs = Date.now() - new Date(criadoEm).getTime();
-  const minutos = Math.floor(diffMs / 60000);
-  if (minutos < 1) return 'agora';
-  if (minutos < 60) return `${minutos}min`;
-  const horas = Math.floor(minutos / 60);
-  if (horas < 24) return `${horas}h`;
-  const dias = Math.floor(horas / 24);
-  return `${dias}d`;
-}
+const ICONE_POR_TIPO = ICONE_IONICONS_POR_TIPO as Record<Notificacao['tipo'], keyof typeof Ionicons.glyphMap>;
+const formatarTempo = formatarTempoRelativo;
 
 export default function NotificacoesScreen() {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
