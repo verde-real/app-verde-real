@@ -17,7 +17,6 @@ import { PostCard } from '@/components/post-card';
 import { Colors, Fonts, Radius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { useSocket } from '@/src/contexts/SocketContext';
 import { CATEGORIAS } from '@/src/constants/categorias';
 import { alternarCurtida, buscarPosts } from '@/src/services/posts';
 import { contarNaoLidas, ouvirNovasNotificacoes } from '@/src/services/notificacoes';
@@ -29,7 +28,6 @@ export default function FeedScreen() {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
   const { usuario } = useAuth();
-  const socket = useSocket();
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -73,22 +71,6 @@ export default function FeedScreen() {
   useEffect(() => {
     carregarPosts();
   }, [carregarPosts]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    function aoReceberPost(novoPost: Post) {
-      setPosts((atual) => {
-        if (categoriaFiltro && novoPost.categoria !== categoriaFiltro) return atual;
-        return [novoPost, ...atual];
-      });
-    }
-
-    socket.on('novo_post', aoReceberPost);
-    return () => {
-      socket.off('novo_post', aoReceberPost);
-    };
-  }, [socket, categoriaFiltro]);
 
   async function handleCurtir(postId: string) {
     if (!usuario) return;

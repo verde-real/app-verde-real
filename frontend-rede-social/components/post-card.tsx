@@ -100,19 +100,31 @@ export function PostCard({
           </View>
         )}
 
-        <TouchableOpacity
-          style={styles.curtirBotao}
-          onPress={() => onCurtir(post.id)}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Ionicons
-            name={post.curtidoPorMim ? 'heart' : 'heart-outline'}
-            size={20}
-            color={post.curtidoPorMim ? cores.danger : cores.icon}
-          />
-          <Text style={[styles.curtirTexto, { color: cores.icon, fontFamily: Fonts.semibold }]}>
-            {post.totalCurtidas} {post.totalCurtidas === 1 ? 'apoio' : 'apoios'}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.acoesLinha}>
+          <TouchableOpacity
+            style={styles.curtirBotao}
+            onPress={() => onCurtir(post.id)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons
+              name={post.curtidoPorMim ? 'heart' : 'heart-outline'}
+              size={20}
+              color={post.curtidoPorMim ? cores.danger : cores.icon}
+            />
+            <Text style={[styles.curtirTexto, { color: cores.icon, fontFamily: Fonts.semibold }]}>
+              {post.totalCurtidas} {post.totalCurtidas === 1 ? 'apoio' : 'apoios'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.comentarBotao}
+            onPress={() =>
+              router.push({ pathname: '/denuncia/[id]', params: { id: post.id, foco: 'comentario' } })
+            }
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="chatbubble-outline" size={19} color={cores.icon} />
+            <Text style={[styles.curtirTexto, { color: cores.icon, fontFamily: Fonts.semibold }]}>Comentar</Text>
+          </TouchableOpacity>
+        </View>
       </Cartao>
     </TouchableOpacity>
   );
@@ -152,6 +164,8 @@ const styles = StyleSheet.create({
   videoTexto: { color: '#fff', fontSize: 13 },
   localizacao: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 10 },
   localizacaoTexto: { fontSize: 12 },
-  curtirBotao: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
+  acoesLinha: { flexDirection: 'row', alignItems: 'center', gap: 20 },
+  curtirBotao: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  comentarBotao: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   curtirTexto: { fontSize: 13 },
 });

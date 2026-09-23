@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -33,7 +33,7 @@ const ETAPA_LABEL: Record<StatusDenuncia, string> = {
 };
 
 export default function DetalheDenunciaScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, foco } = useLocalSearchParams<{ id: string; foco?: string }>();
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
   const router = useRouter();
@@ -43,6 +43,7 @@ export default function DetalheDenunciaScreen() {
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [texto, setTexto] = useState('');
+  const inputComentarioRef = useRef<TextInput>(null);
   const [enviando, setEnviando] = useState(false);
 
   const carregar = useCallback(async () => {
@@ -56,6 +57,13 @@ export default function DetalheDenunciaScreen() {
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+    useEffect(() => {
+    if (foco === 'comentario' && !carregando) {
+      const timer = setTimeout(() => inputComentarioRef.current?.focus(), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [foco, carregando]);
 
   async function handleCurtir() {
     if (!usuario || !post) return;
@@ -171,6 +179,7 @@ export default function DetalheDenunciaScreen() {
 
         <View style={[styles.inputArea, { borderTopColor: cores.border, backgroundColor: cores.background }]}>
           <TextInput
+            ref={inputComentarioRef}
             style={[styles.input, { borderColor: cores.border, color: cores.text, fontFamily: Fonts.regular }]}
             placeholder="Escreva um comentário..."
             placeholderTextColor={cores.icon}

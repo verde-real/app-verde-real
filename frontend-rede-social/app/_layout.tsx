@@ -9,7 +9,6 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider } from '@/src/contexts/AuthContext';
-import { SocketProvider } from '@/src/contexts/SocketContext';
 
 export const unstable_settings = {
   anchor: 'index',
@@ -39,20 +38,18 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <SocketProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="denuncia/[id]" options={{ headerShown: false }} />
-            <Stack.Screen name="empresa/[id]" options={{ headerShown: false }} />
-            <Stack.Screen name="notificacoes" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </SocketProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="denuncia/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="empresa/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="notificacoes" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
     </AuthProvider>
   );
 }
