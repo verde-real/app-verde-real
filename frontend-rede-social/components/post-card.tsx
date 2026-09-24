@@ -1,13 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { Botao } from '@/src/components/ui/Botao';
 import { Emblema } from '@/src/components/ui/Emblema';
 import { Cartao } from '@/src/components/ui/Cartao';
 import { Colors, Fonts, Radius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { atualizarPost, deletarPost } from '@/src/services/posts';
 import { Post } from '@/src/types';
 
 const STATUS_LABEL: Record<Post['status'], string> = {
@@ -29,16 +31,101 @@ export function PostCard({
   post,
   onCurtir,
   onPress,
+  usuarioLogadoId,
+  onAtualizado,
+  onExcluido,
 }: {
   post: Post;
   onCurtir: (id: string) => void;
   onPress?: () => void;
+  usuarioLogadoId?: string;
+  onAtualizado?: (post: Post) => void;
+  onExcluido?: (postId: string) => void;
 }) {
   const router = useRouter();
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
 
+  const souAutor = !!usuarioLogadoId && usuarioLogadoId === post.autor.id;
+  const [modalEdicaoVisivel, setModalEdicaoVisivel] = useState(false);
+  const [textoEdicao, setTextoEdicao] = useState(post.conteudo);
+  const [salvando, setSalvando] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
+
+  function abrirMenu() {
+    Alert.alert('Publicação', undefined, [
+      { text: 'Editar publicação', onPress: abrirEdicao },
+      { text: 'Excluir publicação', style: 'destructive', onPress: confirmarExclusao },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
+  }
+
+  function abrirEdicao() {
+    setTextoEdicao(post.conteudo);
+    setModalEdicaoVisivel(true);
+  }
+
+  function confirmarSalvarEdicao() {
+    const texto = textoEdicao.trim();
+    if (!texto) {
+      Alert.alert('Legenda obrigatória', 'A legenda não pode ficar vazia.');
+      return;
+    }
+    Alert.alert(
+      'Confirmar alteração',
+      'Tem certeza de que deseja alterar esta publicação? Após a alteração, ela poderá ser submetida novamente ao processo de análise.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Confirmar', onPress: salvarEdicao },
+      ]
+    );
+  }
+
+  async function salvarEdicao() {
+    if (!usuarioLogadoId) return;
+    setSalvando(true);
+    try {
+      const postAtualizado = await atualizarPost(post.id, usuarioLogadoId, textoEdicao.trim());
+      setModalEdicaoVisivel(false);
+      onAtualizado?.(postAtualizado);
+    } catch (error) {
+      Alert.alert(
+        'Não foi possível atualizar',
+        error instanceof Error ? error.message : 'Não foi possível atualizar a publicação. Tente novamente.'
+      );
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  function confirmarExclusao() {
+    Alert.alert(
+      'Excluir publicação',
+      'Tem certeza de que deseja excluir esta publicação? Esta ação não poderá ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Excluir', style: 'destructive', onPress: excluir },
+      ]
+    );
+  }
+
+  async function excluir() {
+    if (!usuarioLogadoId) return;
+    setExcluindo(true);
+    try {
+      await deletarPost(post.id, usuarioLogadoId);
+      onExcluido?.(post.id);
+    } catch (error) {
+      Alert.alert(
+        'Não foi possível excluir',
+        error instanceof Error ? error.message : 'Não foi possível excluir a publicação. Tente novamente.'
+      );
+      setExcluindo(false);
+    }
+  }
+
   return (
+    <>
     <TouchableOpacity style={styles.wrapper} activeOpacity={0.85} onPress={onPress} disabled={!onPress}>
       <Cartao style={styles.card}>
         <View style={styles.cabecalho}>
@@ -60,6 +147,16 @@ export function PostCard({
               {formatarData(post.criadoEm)}
             </Text>
           </View>
+
+          {souAutor && (
+            <TouchableOpacity
+              onPress={abrirMenu}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={styles.menuBotao}
+              disabled={excluindo}>
+              <Ionicons name="ellipsis-vertical" size={18} color={cores.icon} />
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.tags}>
@@ -127,6 +224,38 @@ export function PostCard({
         </View>
       </Cartao>
     </TouchableOpacity>
+
+      <Modal
+        visible={modalEdicaoVisivel}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalEdicaoVisivel(false)}>
+        <View style={styles.modalFundo}>
+          <Cartao style={styles.modalCartao}>
+            <Text style={[styles.modalTitulo, { color: cores.text, fontFamily: Fonts.bold }]}>
+              Editar publicação
+            </Text>
+            <TextInput
+              style={[styles.modalInput, { color: cores.text, borderColor: cores.border, fontFamily: Fonts.regular }]}
+              value={textoEdicao}
+              onChangeText={setTextoEdicao}
+              multiline
+              placeholder="Escreva a legenda da publicação"
+              placeholderTextColor={cores.icon}
+            />
+            <View style={styles.modalBotoes}>
+              <Botao
+                titulo="Cancelar"
+                variante="secundario"
+                onPress={() => setModalEdicaoVisivel(false)}
+                style={{ flex: 1 }}
+              />
+              <Botao titulo="Salvar" onPress={confirmarSalvarEdicao} carregando={salvando} style={{ flex: 1 }} />
+            </View>
+          </Cartao>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -168,4 +297,18 @@ const styles = StyleSheet.create({
   curtirBotao: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   comentarBotao: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   curtirTexto: { fontSize: 13 },
+  menuBotao: { padding: 4 },
+  modalFundo: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', paddingHorizontal: 24 },
+  modalCartao: { padding: 18 },
+  modalTitulo: { fontSize: 16, marginBottom: 12 },
+  modalInput: {
+    borderWidth: 1,
+    borderRadius: Radius,
+    padding: 12,
+    minHeight: 100,
+    textAlignVertical: 'top',
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  modalBotoes: { flexDirection: 'row', gap: 10 },
 });
