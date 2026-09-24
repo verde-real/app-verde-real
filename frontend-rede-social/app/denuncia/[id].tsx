@@ -185,8 +185,8 @@ export default function DetalheDenunciaScreen() {
             placeholderTextColor={cores.icon}
             value={texto}
             onChangeText={setTexto}
-          />npx exp start --tunnel -c
-          
+          />
+
           <TouchableOpacity onPress={handleEnviarComentario} disabled={enviando || !texto.trim()}>
             {enviando ? (
               <ActivityIndicator color={cores.tint} />
