@@ -191,6 +191,21 @@ export default function PerfilScreen() {
       carregarConteudo(abaAtiva, true);
     }
   }
+  
+  function handlePostAtualizado(postAtualizado: Post) {
+    setCacheConteudo((atual) => ({
+      ...atual,
+      [abaAtiva]: (atual[abaAtiva] ?? []).map((p) => (p.id === postAtualizado.id ? postAtualizado : p)),
+    }));
+  }
+
+  function handlePostExcluido(postId: string) {
+    setCacheConteudo((atual) => ({
+      ...atual,
+      [abaAtiva]: (atual[abaAtiva] ?? []).filter((p) => p.id !== postId),
+    }));
+    setTotalPublicacoes((atual) => Math.max(0, atual - 1));
+  }
 
   if (!usuario) return null;
 
@@ -344,6 +359,9 @@ export default function PerfilScreen() {
               post={post}
               onCurtir={handleCurtir}
               onPress={() => router.push({ pathname: '/denuncia/[id]', params: { id: post.id } })}
+              usuarioLogadoId={usuario.id}
+              onAtualizado={handlePostAtualizado}
+              onExcluido={handlePostExcluido}
             />
           ))
         )}
