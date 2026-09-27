@@ -109,12 +109,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error(error.message);
     }
 
+    let usuarioCriado: Usuario | null = null;
     if (data.session?.user) {
       setToken(data.session.access_token);
-      await carregarPerfil(data.session.user.id);
+      usuarioCriado = await carregarPerfil(data.session.user.id);
     }
 
-    return { precisaConfirmarEmail: !data.session };
+    return { precisaConfirmarEmail: !data.session, usuario: usuarioCriado };
   }
 
   async function recuperarSenha(email: string) {

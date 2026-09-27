@@ -40,6 +40,7 @@ export default function EscolherUsernameScreen() {
   }
 
   async function handleConfirmar() {
+    if (!usuario) return;
     if (!usernameValido(valor)) {
       setErro('Use de 3 a 24 letras minúsculas, números, ponto ou underscore.');
       return;
