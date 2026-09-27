@@ -1,6 +1,7 @@
 import { Redirect } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { precisaEscolherUsername } from 'verde-real-core';
 
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -19,5 +20,7 @@ export default function Index() {
     );
   }
 
-  return <Redirect href={usuario ? '/(tabs)' : '/(auth)/login'} />;
+  if (!usuario) return <Redirect href="/(auth)/login" />;
+  if (precisaEscolherUsername(usuario)) return <Redirect href="/escolher-username" />;
+  return <Redirect href="/(tabs)" />;
 }

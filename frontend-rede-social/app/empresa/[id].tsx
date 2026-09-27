@@ -145,7 +145,14 @@ export default function PerfilEmpresaScreen() {
               <Ionicons name="business" size={32} color={cores.tint} />
             )}
           </View>
-          <Text style={[styles.nome, { color: cores.text, fontFamily: Fonts.bold }]}>{empresa.nome}</Text>
+          <Text style={[styles.nome, { color: cores.text, fontFamily: Fonts.bold }]}>
+            {empresa.username ? `@${empresa.username}` : empresa.nome}
+          </Text>
+          {empresa.username && (
+            <Text style={[styles.nomeSecundario, { color: cores.icon, fontFamily: Fonts.mono }]}>
+              {empresa.nome}
+            </Text>
+          )}
 
           <View style={{ marginTop: 10 }}>
             {seloAtivo ? (
@@ -241,6 +248,7 @@ const styles = StyleSheet.create({
   },
   avatarImg: { width: '100%', height: '100%' },
   nome: { fontSize: 19, marginTop: 12, textAlign: 'center', paddingHorizontal: 20 },
+  nomeSecundario: { fontSize: 12, marginTop: 2, textAlign: 'center' },
   seguidoresTexto: { fontSize: 10, letterSpacing: 1, marginTop: 8 },
   selosArea: { paddingHorizontal: 15, marginBottom: 10 },
   secaoTitulo: { fontSize: 15, marginBottom: 10 },

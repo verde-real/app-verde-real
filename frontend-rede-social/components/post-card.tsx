@@ -143,6 +143,11 @@ export function PostCard({
             <Text style={[styles.autor, { color: cores.text, fontFamily: Fonts.semibold }]} numberOfLines={1}>
               {post.autor.nome}
             </Text>
+            {post.autor.username && (
+              <Text style={[styles.autorUsername, { color: cores.icon, fontFamily: Fonts.mono }]} numberOfLines={1}>
+                @{post.autor.username}
+              </Text>
+            )}
             <Text style={[styles.data, { color: cores.icon, fontFamily: Fonts.mono }]}>
               {formatarData(post.criadoEm)}
             </Text>
@@ -274,6 +279,7 @@ const styles = StyleSheet.create({
   avatarImg: { width: '100%', height: '100%' },
   avatarIniciais: { fontSize: 16 },
   autor: { fontSize: 15 },
+  autorUsername: { fontSize: 11, marginTop: 1 },
   data: { fontSize: 10 },
   tags: { flexDirection: 'row', gap: 6, marginBottom: 10, flexWrap: 'wrap' },
   empresaTag: {

@@ -56,11 +56,6 @@ export default function PerfilScreen() {
   const [carregandoConteudo, setCarregandoConteudo] = useState(true);
   const [erroConteudo, setErroConteudo] = useState<string | null>(null);
 
-  const nomeDeUsuario = useMemo(() => {
-    if (!usuario?.email) return null;
-    return `@${usuario.email.split('@')[0]}`;
-  }, [usuario?.email]);
-
   const carregarMetricas = useCallback(async () => {
     if (!usuario) return;
     setCarregandoMetricas(true);
@@ -238,9 +233,11 @@ export default function PerfilScreen() {
             </View>
           </TouchableOpacity>
 
-          <Text style={[styles.nome, { color: cores.text, fontFamily: Fonts.bold }]}>{usuario.nome}</Text>
-          {nomeDeUsuario && (
-            <Text style={[styles.arroba, { color: cores.icon, fontFamily: Fonts.mono }]}>{nomeDeUsuario}</Text>
+          <Text style={[styles.nome, { color: cores.text, fontFamily: Fonts.bold }]}>
+            {usuario.username ? `@${usuario.username}` : usuario.nome}
+          </Text>
+          {usuario.username && (
+            <Text style={[styles.arroba, { color: cores.icon, fontFamily: Fonts.mono }]}>{usuario.nome}</Text>
           )}
 
           <View style={styles.badges}>

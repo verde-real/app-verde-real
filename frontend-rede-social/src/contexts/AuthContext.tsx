@@ -8,8 +8,8 @@ interface AuthContextValue {
   usuario: Usuario | null;
   token: string | null;
   carregando: boolean;
-  entrar: (email: string, senha: string) => Promise<void>;
-  cadastrar: (dados: DadosCadastro) => Promise<{ precisaConfirmarEmail: boolean }>;
+  entrar: (email: string, senha: string) => Promise<Usuario | null>;
+  cadastrar: (dados: DadosCadastro) => Promise<{ precisaConfirmarEmail: boolean; usuario: Usuario | null }>;
   recuperarSenha: (email: string) => Promise<void>;
   sair: () => Promise<void>;
   atualizarUsuario: (dados: Partial<Usuario>) => void;
@@ -24,6 +24,7 @@ function mapearPerfil(perfil: any): Usuario {
     email: perfil.email,
     tipo: perfil.tipo,
     avatarUrl: perfil.avatar_url,
+    username: perfil.username,
   };
 }
 
@@ -65,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  async function entrar(email: string, senha: string) {
+  async function entrar(email: string, senha: string): Promise<Usuario | null> {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.toLowerCase().trim(),
       password: senha,
@@ -83,8 +84,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (data.session?.user) {
       setToken(data.session.access_token);
-      await carregarPerfil(data.session.user.id);
+      return await carregarPerfil(data.session.user.id);
     }
+    return null;
   }
 
   async function cadastrar(dados: DadosCadastro) {

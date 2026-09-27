@@ -1,3 +1,4 @@
+import { precisaEscolherUsername } from 'verde-real-core';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -42,20 +43,42 @@ export default function LoginScreen() {
         Alert.alert('Atenção', 'Informe seu e-mail.');
         return;
       }
-      setCarregando(true);
-      try {
-        await recuperarSenha(email.trim());
-        Alert.alert(
-          'Verifique seu email',
-          'Se este email estiver cadastrado, você vai receber um link para redefinir sua senha.'
-        );
-        setAba('entrar');
-      } catch (error) {
-        Alert.alert('Ops', error instanceof Error ? error.message : 'Algo deu errado.');
-      } finally {
-        setCarregando(false);
+    setCarregando(true);
+    try {
+      let usuarioResultante = null;
+
+      if (aba === 'cadastro') {
+        const resultado = await cadastrar({
+          nome: nome.trim(),
+          email: email.trim(),
+          senha,
+          confirmarSenha,
+          tipo,
+          aceitouTermos,
+        });
+        if (resultado.precisaConfirmarEmail) {
+          Alert.alert(
+            'Quase lá!',
+            'Enviamos um link de confirmação para o seu email. Confirme para poder entrar.'
+          );
+          setAba('entrar');
+          return;
+        }
+        usuarioResultante = resultado.usuario;
+      } else {
+        usuarioResultante = await entrar(email.trim(), senha);
       }
-      return;
+
+      if (usuarioResultante && precisaEscolherUsername(usuarioResultante)) {
+        router.replace('/escolher-username');
+      } else {
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      Alert.alert('Ops', error instanceof Error ? error.message : 'Algo deu errado.');
+    } finally {
+      setCarregando(false);
+    }
     }
 
     if (!email.trim() || !senha.trim() || (aba === 'cadastro' && !nome.trim())) {

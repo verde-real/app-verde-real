@@ -20,5 +20,6 @@ export async function buscarPerfilPorId(id: string) {
     tipo: data.tipo,
     avatarUrl: data.avatar_url,
     bio: data.bio,
+    username: data.username,
   };
 }
