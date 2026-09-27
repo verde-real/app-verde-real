@@ -24,9 +24,14 @@ export function Botao({
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
 
+  // Importante: o botão "secundario" (ex.: "Cancelar") usa fundo opaco
+  // (cores.card) em vez de transparente e um texto que nunca é a mesma
+  // cor da borda. Isso evita o bug em que o texto "Cancelar" ficava
+  // invisível (fundo transparente + borda e texto na mesma cor podiam
+  // se misturar dependendo do tema/composição do Android).
   const corFundo =
-    variante === 'primario' ? cores.tint : variante === 'perigo' ? cores.danger : 'transparent';
-  const corTexto = variante === 'secundario' ? cores.tint : cores.card;
+    variante === 'primario' ? cores.tint : variante === 'perigo' ? cores.danger : cores.card;
+  const corTexto = variante === 'secundario' ? cores.text : cores.card;
   const corBorda = variante === 'perigo' ? cores.danger : cores.tint;
 
   return (
@@ -49,7 +54,12 @@ export function Botao({
         {carregando ? (
           <ActivityIndicator color={corTexto} />
         ) : (
-          <Text style={[styles.texto, { color: corTexto, fontFamily: Fonts.bold }]}>{titulo}</Text>
+          <Text
+            style={[styles.texto, { color: corTexto, fontFamily: Fonts.bold }]}
+            numberOfLines={1}
+            allowFontScaling={false}>
+            {titulo}
+          </Text>
         )}
       </Pressable>
     </View>
@@ -70,12 +80,16 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: Radius,
     paddingVertical: 14,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
   texto: {
     fontSize: 13,
+    lineHeight: 18,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
+    includeFontPadding: false, // Android: evita corte/"sumiço" do texto com fontes customizadas
+    textAlignVertical: 'center',
   },
 });
