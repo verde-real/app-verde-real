@@ -129,29 +129,34 @@ export function PostCard({
     <TouchableOpacity style={styles.wrapper} activeOpacity={0.85} onPress={onPress} disabled={!onPress}>
       <Cartao style={styles.card}>
         <View style={styles.cabecalho}>
-          <View style={[styles.avatar, { backgroundColor: cores.tintSoft, borderColor: cores.border }]}>
-            {post.autor.avatarUrl ? (
-              <Image source={{ uri: post.autor.avatarUrl }} style={styles.avatarImg} />
-            ) : (
-              <Text style={[styles.avatarIniciais, { color: cores.tint, fontFamily: Fonts.bold }]}>
-                {post.autor.nome.charAt(0).toUpperCase()}
-              </Text>
-            )}
-          </View>
+          <TouchableOpacity
+            style={styles.autorTocavel}
+            activeOpacity={0.7}
+            onPress={() => router.push({ pathname: '/usuario/[id]', params: { id: post.autor.id } })}>
+            <View style={[styles.avatar, { backgroundColor: cores.tintSoft, borderColor: cores.border }]}>
+              {post.autor.avatarUrl ? (
+                <Image source={{ uri: post.autor.avatarUrl }} style={styles.avatarImg} />
+              ) : (
+                <Text style={[styles.avatarIniciais, { color: cores.tint, fontFamily: Fonts.bold }]}>
+                  {post.autor.nome.charAt(0).toUpperCase()}
+                </Text>
+              )}
+            </View>
 
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.autor, { color: cores.text, fontFamily: Fonts.semibold }]} numberOfLines={1}>
-              {post.autor.nome}
-            </Text>
-            {post.autor.username && (
-              <Text style={[styles.autorUsername, { color: cores.icon, fontFamily: Fonts.mono }]} numberOfLines={1}>
-                @{post.autor.username}
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.autor, { color: cores.text, fontFamily: Fonts.semibold }]} numberOfLines={1}>
+                {post.autor.nome}
               </Text>
-            )}
-            <Text style={[styles.data, { color: cores.icon, fontFamily: Fonts.mono }]}>
-              {formatarData(post.criadoEm)}
-            </Text>
-          </View>
+              {post.autor.username && (
+                <Text style={[styles.autorUsername, { color: cores.icon, fontFamily: Fonts.mono }]} numberOfLines={1}>
+                  @{post.autor.username}
+                </Text>
+              )}
+              <Text style={[styles.data, { color: cores.icon, fontFamily: Fonts.mono }]}>
+                {formatarData(post.criadoEm)}
+              </Text>
+            </View>
+          </TouchableOpacity>
 
           {souAutor && (
             <TouchableOpacity
@@ -268,6 +273,7 @@ const styles = StyleSheet.create({
   wrapper: { marginHorizontal: 15, marginBottom: 16 },
   card: { padding: 14 },
   cabecalho: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  autorTocavel: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatar: {
     width: 38,
     height: 38,

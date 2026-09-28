@@ -23,7 +23,7 @@ import { Cartao } from '@/src/components/ui/Cartao';
 import { Emblema } from '@/src/components/ui/Emblema';
 import { Colors, Fonts, Radius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { rotuloConquista } from '@/src/constants/categorias';
+import { rotuloConquista } from 'verde-real-core';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { atualizarAvatar } from '@/src/services/profile';
 import { alternarCurtida, buscarPostsCurtidosPorMim, buscarPostsPorAutor } from '@/src/services/posts';
@@ -265,11 +265,12 @@ export default function PerfilScreen() {
               label="Publicações"
               carregando={carregandoMetricas}
             />
-            <MetricaCard
+              <MetricaCard
               icone="people-outline"
               valor={totalSeguirRelacao}
               label={labelSeguirRelacao}
               carregando={carregandoMetricas}
+              onPress={usuario.tipo === 'cliente' ? () => router.push('/seguindo') : undefined}
             />
             <MetricaCard
               icone="heart-outline"
@@ -374,16 +375,18 @@ function MetricaCard({
   valor,
   label,
   carregando,
+  onPress,
 }: {
   icone: keyof typeof Ionicons.glyphMap;
   valor: number;
   label: string;
   carregando: boolean;
+  onPress?: () => void;
 }) {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
 
-  return (
+  const conteudo = (
     <Cartao style={styles.metricaCartao} comSombra={false}>
       <Ionicons name={icone} size={18} color={cores.tint} />
       {carregando ? (
@@ -393,6 +396,14 @@ function MetricaCard({
       )}
       <Text style={[styles.metricaLabel, { color: cores.icon, fontFamily: Fonts.mono }]}>{label.toUpperCase()}</Text>
     </Cartao>
+  );
+
+  if (!onPress) return conteudo;
+
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.75}>
+      {conteudo}
+    </TouchableOpacity>
   );
 }
 

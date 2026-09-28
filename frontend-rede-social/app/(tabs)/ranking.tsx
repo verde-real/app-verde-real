@@ -8,7 +8,7 @@ import { EstadoVazio } from '@/components/estado-vazio';
 import { Cartao } from '@/src/components/ui/Cartao';
 import { Colors, Fonts, Radius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { rotuloConquista } from '@/src/constants/categorias';
+import { rotuloConquista } from 'verde-real-core';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { buscarRanking } from '@/src/services/ranking';
 import { RankingItem } from '@/src/types';

@@ -20,8 +20,7 @@ export const CORES_CATEGORIA: Record<Categoria, string> = {
   Outro: '#2F6B4F',
 };
 
-export function rotuloConquista(totalDenuncias: number): string {
-  if (totalDenuncias >= 10) return 'Guardião Verde 🌳';
-  if (totalDenuncias >= 3) return 'Vigilante Ambiental 🌿';
-  return 'Iniciante 🌱';
-}
+// A classificação por nível (Iniciante/Explorador/Vigilante Ambiental) foi
+// centralizada no pacote compartilhado `verde-real-core` (rotuloConquista /
+// calcularNivelUsuario). Importe de lá:
+// import { rotuloConquista } from 'verde-real-core';
