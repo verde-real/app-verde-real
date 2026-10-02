@@ -20,6 +20,7 @@ import { Botao } from '@/src/components/ui/Botao';
 import { CalendarioCompacto } from '@/src/components/ui/CalendarioCompacto';
 import { Cartao } from '@/src/components/ui/Cartao';
 import { Colors, Fonts, Radius } from '@/constants/theme';
+import { NOTA_VALORES_PLANOS, PLANOS_SELO, PlanoSelo } from '@/constants/planos-selo';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { ArquivoSelecionado, selecionarDocumentos } from '@/src/services/documentos-selo';
@@ -27,15 +28,24 @@ import { supabase } from '@/src/services/supabase';
 import {
   DadosAuditoriaSolicitacao,
   DadosEmpresaSolicitacao,
+  DadosPlanoPagamento,
+  DadosSolicitacaoSelo,
+  ErroSolicitacaoSelo,
   ErroValidacaoSolicitacao,
   MetaSustentabilidade,
+  MetodoPagamentoSelo,
+  ROTULO_METODO_PAGAMENTO,
   ROTULO_TIPO_DOCUMENTO,
   TipoDocumentoSelo,
+  criarServicoSolicitacaoSelo,
   formatarCNPJ,
   validarAuditoria,
   validarDadosEmpresa,
   validarDocumentos,
+  validarSolicitacaoSelo,
 } from 'verde-real-core';
+
+const servicoSolicitacao = criarServicoSolicitacaoSelo(supabase as any);
 
 type Etapa = 1 | 2 | 3 | 4;
 
@@ -53,6 +63,8 @@ const TIPOS_DOCUMENTO: TipoDocumentoSelo[] = [
   'comprovacao_metas',
   'outro',
 ];
+
+const METODOS_PAGAMENTO: MetodoPagamentoSelo[] = ['pix', 'cartao', 'boleto'];
 
 const CATEGORIAS_META_SUGERIDAS = [
   'Redução de emissões',
@@ -136,6 +148,14 @@ export default function SolicitarSeloFormScreen() {
   const [metas, setMetas] = useState<MetaSustentabilidade[]>([vazioMeta()]);
   const [errosAuditoria, setErrosAuditoria] = useState<string[]>([]);
 
+  // Etapa 4
+  const [planoSelecionado, setPlanoSelecionado] = useState<string | null>(null);
+  const [metodoPagamento, setMetodoPagamento] = useState<MetodoPagamentoSelo | null>(null);
+  const [errosPlano, setErrosPlano] = useState<string[]>([]);
+  const [enviando, setEnviando] = useState(false);
+  const [erroEnvio, setErroEnvio] = useState<string | null>(null);
+  const [enviado, setEnviado] = useState(false);
+
   const mapaErrosEmpresa = useMemo(() => {
     const mapa: Record<string, string> = {};
     errosEmpresa.forEach((e) => {
@@ -216,6 +236,25 @@ export default function SolicitarSeloFormScreen() {
     };
   }
 
+  function montarDadosCompletos(): DadosSolicitacaoSelo {
+    const plano = PLANOS_SELO.find((p) => p.id === planoSelecionado);
+    const planoPagamento: DadosPlanoPagamento = {
+      plano: plano?.nome ?? '',
+      metodoPagamento: (metodoPagamento ?? '') as MetodoPagamentoSelo,
+    };
+    return {
+      empresa: dadosEmpresa,
+      documentos: documentos.map(({ tipo, nomeArquivo, mimeType, tamanhoBytes }) => ({
+        tipo,
+        nomeArquivo,
+        mimeType,
+        tamanhoBytes,
+      })),
+      auditoria: montarDadosAuditoria(),
+      planoPagamento,
+    };
+  }
+
   function handleContinuar() {
     if (etapa === 1) {
       const erros = validarDadosEmpresa(dadosEmpresa);
@@ -244,15 +283,69 @@ export default function SolicitarSeloFormScreen() {
       setEtapa(4);
       return;
     }
-    setEtapa((atual) => Math.min(4, atual + 1) as Etapa);
   }
 
   function handleVoltar() {
+    if (enviando) return;
     if (etapa === 1) {
       router.back();
       return;
     }
     setEtapa((atual) => (atual - 1) as Etapa);
+  }
+
+  async function handleEnviar() {
+    if (!usuario) return;
+
+    const dadosCompletos = montarDadosCompletos();
+    const erros = validarSolicitacaoSelo(dadosCompletos);
+    if (erros.length > 0) {
+      setErrosPlano(erros.filter((e) => e.campo === 'plano' || e.campo === 'metodoPagamento').map((e) => e.mensagem));
+      Alert.alert('Revise a solicitação', 'Alguns dados ainda precisam de atenção antes do envio.');
+      return;
+    }
+    setErrosPlano([]);
+    setEnviando(true);
+    setErroEnvio(null);
+
+    try {
+      await servicoSolicitacao.enviarSolicitacao(usuario, dadosCompletos, documentos);
+      setEnviado(true);
+    } catch (error) {
+      if (error instanceof ErroSolicitacaoSelo && error.erros.length > 0) {
+        setErroEnvio(error.erros.map((e) => e.mensagem).join(' '));
+      } else {
+        setErroEnvio(error instanceof Error ? error.message : 'Não foi possível enviar a solicitação.');
+      }
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  if (enviado) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: cores.background }]} edges={['top']}>
+        <StatusBar barStyle={scheme === 'dark' ? 'light-content' : 'dark-content'} />
+        <View style={styles.sucessoContainer}>
+          <Ionicons name="checkmark-circle" size={64} color={cores.tint} />
+          <Text style={[styles.sucessoTitulo, { color: cores.text, fontFamily: Fonts.bold }]}>
+            Solicitação enviada com sucesso
+          </Text>
+          <Text style={[styles.sucessoTexto, { color: cores.secondary, fontFamily: Fonts.regular }]}>
+            Sua documentação foi recebida e está em análise. O andamento da solicitação ocorrerá em até 4
+            dias úteis.
+          </Text>
+          <Text style={[styles.sucessoTexto, { color: cores.secondary, fontFamily: Fonts.regular }]}>
+            Você pode acompanhar o status pela página "Solicitar Selo".
+          </Text>
+          <Botao
+            titulo="Ir para Solicitar Selo"
+            onPress={() => router.replace('/solicitar-selo' as any)}
+            style={{ marginTop: 24, alignSelf: 'stretch' }}
+          />
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -600,21 +693,107 @@ export default function SolicitarSeloFormScreen() {
               </Cartao>
             </>
           ) : (
-            <Cartao style={{ alignItems: 'center', paddingVertical: 40 }}>
-              <Ionicons name="construct-outline" size={32} color={cores.icon} />
-              <Text style={[styles.emConstrucao, { color: cores.text, fontFamily: Fonts.semibold }]}>
-                Etapa "{ROTULOS_ETAPA[etapa]}" ainda será implementada
-              </Text>
-              <Text style={[styles.emConstrucaoDesc, { color: cores.icon, fontFamily: Fonts.regular }]}>
-                A navegação já está funcionando — esta etapa chega num próximo bloco.
-              </Text>
-            </Cartao>
+            <>
+              <Cartao>
+                <Text style={[styles.secaoTitulo, { color: cores.text, fontFamily: Fonts.bold }]}>Plano</Text>
+                {PLANOS_SELO.map((plano) => {
+                  const selecionado = plano.id === planoSelecionado;
+                  return (
+                    <TouchableOpacity
+                      key={plano.id}
+                      onPress={() => setPlanoSelecionado(plano.id)}
+                      style={[
+                        styles.planoBox,
+                        { borderColor: selecionado ? cores.tint : cores.border, backgroundColor: selecionado ? cores.tintSoft : 'transparent' },
+                      ]}>
+                      <View style={styles.planoTopo}>
+                        <Text style={[styles.planoNome, { color: cores.text, fontFamily: Fonts.bold }]}>{plano.nome}</Text>
+                        <Text style={[styles.planoPreco, { color: cores.tint, fontFamily: Fonts.semibold }]}>
+                          {plano.precoExibicao}
+                        </Text>
+                      </View>
+                      <Text style={[styles.planoDesc, { color: cores.secondary, fontFamily: Fonts.regular }]}>
+                        {plano.descricao}
+                      </Text>
+                      {plano.recursos.map((rec, i) => (
+                        <View key={i} style={styles.planoRecursoLinha}>
+                          <Ionicons name="checkmark" size={13} color={cores.tint} />
+                          <Text style={[styles.planoRecursoTexto, { color: cores.secondary, fontFamily: Fonts.regular }]}>
+                            {rec}
+                          </Text>
+                        </View>
+                      ))}
+                    </TouchableOpacity>
+                  );
+                })}
+                <Text style={[styles.notaPlanos, { color: cores.icon, fontFamily: Fonts.regular }]}>
+                  {NOTA_VALORES_PLANOS}
+                </Text>
+              </Cartao>
+
+              <Cartao style={{ marginTop: 16 }}>
+                <Text style={[styles.secaoTitulo, { color: cores.text, fontFamily: Fonts.bold }]}>
+                  Método de pagamento
+                </Text>
+                <View style={styles.chipsLinha}>
+                  {METODOS_PAGAMENTO.map((metodo) => (
+                    <TouchableOpacity
+                      key={metodo}
+                      onPress={() => setMetodoPagamento(metodo)}
+                      style={[
+                        styles.chip,
+                        {
+                          borderColor: metodoPagamento === metodo ? cores.tint : cores.border,
+                          backgroundColor: metodoPagamento === metodo ? cores.tintSoft : 'transparent',
+                        },
+                      ]}>
+                      <Text
+                        style={[
+                          styles.chipTexto,
+                          { color: metodoPagamento === metodo ? cores.tint : cores.icon, fontFamily: Fonts.mono },
+                        ]}>
+                        {ROTULO_METODO_PAGAMENTO[metodo].toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {errosPlano.length > 0 && (
+                  <View style={{ marginTop: 10 }}>
+                    {errosPlano.map((msg, i) => (
+                      <Text key={i} style={[styles.erroTexto, { color: cores.danger, fontFamily: Fonts.regular }]}>
+                        {msg}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+              </Cartao>
+
+              <Cartao style={{ marginTop: 16 }}>
+                <Text style={[styles.secaoTitulo, { color: cores.text, fontFamily: Fonts.bold }]}>Resumo</Text>
+                <LinhaResumo label="Empresa" valor={dadosEmpresa.nomeFantasia || dadosEmpresa.razaoSocial} cores={cores} />
+                <LinhaResumo label="CNPJ" valor={formatarCNPJ(dadosEmpresa.cnpj)} cores={cores} />
+                <LinhaResumo label="Documentos" valor={`${documentos.length} arquivo(s)`} cores={cores} />
+                <LinhaResumo label="Data da auditoria" valor={formatarDataExibicao(dataAuditoria)} cores={cores} />
+                <LinhaResumo label="Local" valor={localAuditoria || 'Não informado'} cores={cores} />
+                <LinhaResumo label="Metas" valor={`${metas.filter((m) => m.descricao.trim()).length} meta(s)`} cores={cores} />
+              </Cartao>
+
+              {erroEnvio && (
+                <Cartao style={{ marginTop: 16 }}>
+                  <Text style={{ color: cores.danger, fontFamily: Fonts.semibold }}>{erroEnvio}</Text>
+                </Cartao>
+              )}
+            </>
           )}
         </ScrollView>
 
         <View style={[styles.rodape, { borderTopColor: cores.border, backgroundColor: cores.background }]}>
           <Botao titulo="Voltar" variante="secundario" onPress={handleVoltar} style={{ flex: 1 }} />
-          <Botao titulo="Continuar" onPress={handleContinuar} style={{ flex: 1 }} />
+          {etapa === 4 ? (
+            <Botao titulo="Enviar solicitação" onPress={handleEnviar} carregando={enviando} style={{ flex: 1 }} />
+          ) : (
+            <Botao titulo="Continuar" onPress={handleContinuar} style={{ flex: 1 }} />
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -658,6 +837,15 @@ function Campo({
   );
 }
 
+function LinhaResumo({ label, valor, cores }: { label: string; valor: string; cores: typeof Colors.light }) {
+  return (
+    <View style={styles.resumoLinha}>
+      <Text style={[styles.resumoLabel, { color: cores.icon, fontFamily: Fonts.mono }]}>{label.toUpperCase()}</Text>
+      <Text style={[styles.resumoValor, { color: cores.text, fontFamily: Fonts.semibold }]}>{valor}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
@@ -686,8 +874,6 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderRadius: Radius, padding: 12, fontSize: 14 },
   erroTexto: { fontSize: 11, marginTop: 4 },
   linhaDupla: { flexDirection: 'row', gap: 10 },
-  emConstrucao: { fontSize: 14, marginTop: 10 },
-  emConstrucaoDesc: { fontSize: 12, textAlign: 'center', marginTop: 6, paddingHorizontal: 20 },
   rodape: { flexDirection: 'row', gap: 10, padding: 16, borderTopWidth: 1 },
   secaoTitulo: { fontSize: 15, marginBottom: 6 },
   secaoDesc: { fontSize: 12, lineHeight: 17, marginBottom: 16 },
@@ -702,4 +888,18 @@ const styles = StyleSheet.create({
   metaBox: { borderWidth: 1, borderRadius: Radius, padding: 12, marginBottom: 12 },
   removerMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 2 },
   removerMetaTexto: { fontSize: 9, letterSpacing: 0.4 },
+  planoBox: { borderWidth: 1, borderRadius: Radius, padding: 14, marginBottom: 12 },
+  planoTopo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  planoNome: { fontSize: 14 },
+  planoPreco: { fontSize: 14 },
+  planoDesc: { fontSize: 12, lineHeight: 17, marginBottom: 8 },
+  planoRecursoLinha: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  planoRecursoTexto: { fontSize: 12 },
+  notaPlanos: { fontSize: 10, lineHeight: 14, marginTop: 4 },
+  resumoLinha: { marginBottom: 10 },
+  resumoLabel: { fontSize: 10, letterSpacing: 0.8, marginBottom: 2 },
+  resumoValor: { fontSize: 13 },
+  sucessoContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30 },
+  sucessoTitulo: { fontSize: 18, textAlign: 'center', marginTop: 16, marginBottom: 10 },
+  sucessoTexto: { fontSize: 13, textAlign: 'center', lineHeight: 19, marginBottom: 6 },
 });
