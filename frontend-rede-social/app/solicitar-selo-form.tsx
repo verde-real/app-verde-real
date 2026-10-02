@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Botao } from '@/src/components/ui/Botao';
+import { CalendarioCompacto } from '@/src/components/ui/CalendarioCompacto';
 import { Cartao } from '@/src/components/ui/Cartao';
 import { Colors, Fonts, Radius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -24,11 +25,14 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { ArquivoSelecionado, selecionarDocumentos } from '@/src/services/documentos-selo';
 import { supabase } from '@/src/services/supabase';
 import {
+  DadosAuditoriaSolicitacao,
   DadosEmpresaSolicitacao,
   ErroValidacaoSolicitacao,
+  MetaSustentabilidade,
   ROTULO_TIPO_DOCUMENTO,
   TipoDocumentoSelo,
   formatarCNPJ,
+  validarAuditoria,
   validarDadosEmpresa,
   validarDocumentos,
 } from 'verde-real-core';
@@ -50,6 +54,15 @@ const TIPOS_DOCUMENTO: TipoDocumentoSelo[] = [
   'outro',
 ];
 
+const CATEGORIAS_META_SUGERIDAS = [
+  'Redução de emissões',
+  'Consumo de água',
+  'Resíduos',
+  'Energia renovável',
+  'Reciclagem',
+  'Outro',
+];
+
 function vazioDadosEmpresa(): DadosEmpresaSolicitacao {
   return {
     cnpj: '',
@@ -65,6 +78,10 @@ function vazioDadosEmpresa(): DadosEmpresaSolicitacao {
     responsavelCargo: '',
     informacoesAdicionais: '',
   };
+}
+
+function vazioMeta(): MetaSustentabilidade {
+  return { categoria: '', descricao: '', meta: '', prazo: '', indicador: '', observacao: '' };
 }
 
 function formatarTelefone(valor: string): string {
@@ -83,6 +100,12 @@ function formatarCEP(valor: string): string {
 function formatarTamanho(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatarDataExibicao(iso: string | null): string {
+  if (!iso) return 'Selecione uma data';
+  const [ano, mes, dia] = iso.split('-');
+  return `${dia}/${mes}/${ano}`;
 }
 
 function iconePorMime(mimeType: string): keyof typeof Ionicons.glyphMap {
@@ -106,6 +129,12 @@ export default function SolicitarSeloFormScreen() {
   const [documentos, setDocumentos] = useState<ArquivoSelecionado[]>([]);
   const [errosDocumentos, setErrosDocumentos] = useState<string[]>([]);
   const [adicionandoDocumento, setAdicionandoDocumento] = useState(false);
+
+  // Etapa 3
+  const [dataAuditoria, setDataAuditoria] = useState<string | null>(null);
+  const [localAuditoria, setLocalAuditoria] = useState('');
+  const [metas, setMetas] = useState<MetaSustentabilidade[]>([vazioMeta()]);
+  const [errosAuditoria, setErrosAuditoria] = useState<string[]>([]);
 
   const mapaErrosEmpresa = useMemo(() => {
     const mapa: Record<string, string> = {};
@@ -167,6 +196,26 @@ export default function SolicitarSeloFormScreen() {
     setDocumentos((atual) => atual.map((doc, i) => (i === indice ? { ...doc, tipo } : doc)));
   }
 
+  function handleAtualizarMeta<K extends keyof MetaSustentabilidade>(indice: number, campo: K, valor: string) {
+    setMetas((atual) => atual.map((m, i) => (i === indice ? { ...m, [campo]: valor } : m)));
+  }
+
+  function handleAdicionarMeta() {
+    setMetas((atual) => [...atual, vazioMeta()]);
+  }
+
+  function handleRemoverMeta(indice: number) {
+    setMetas((atual) => (atual.length > 1 ? atual.filter((_, i) => i !== indice) : atual));
+  }
+
+  function montarDadosAuditoria(): DadosAuditoriaSolicitacao {
+    return {
+      dataAuditoria: dataAuditoria ?? '',
+      localAuditoria,
+      metas: metas.filter((m) => m.descricao.trim().length > 0),
+    };
+  }
+
   function handleContinuar() {
     if (etapa === 1) {
       const erros = validarDadosEmpresa(dadosEmpresa);
@@ -183,6 +232,16 @@ export default function SolicitarSeloFormScreen() {
       }
       setErrosDocumentos([]);
       setEtapa(3);
+      return;
+    }
+    if (etapa === 3) {
+      const erros = validarAuditoria(montarDadosAuditoria());
+      if (erros.length > 0) {
+        setErrosAuditoria(erros.map((e) => e.mensagem));
+        return;
+      }
+      setErrosAuditoria([]);
+      setEtapa(4);
       return;
     }
     setEtapa((atual) => Math.min(4, atual + 1) as Etapa);
@@ -431,6 +490,115 @@ export default function SolicitarSeloFormScreen() {
                 </View>
               )}
             </Cartao>
+          ) : etapa === 3 ? (
+            <>
+              <Cartao>
+                <Text style={[styles.secaoTitulo, { color: cores.text, fontFamily: Fonts.bold }]}>
+                  Data da auditoria
+                </Text>
+                <Text style={[styles.dataSelecionada, { color: cores.tint, fontFamily: Fonts.semibold }]}>
+                  {formatarDataExibicao(dataAuditoria)}
+                </Text>
+                <CalendarioCompacto valorSelecionado={dataAuditoria} aoSelecionar={setDataAuditoria} cores={cores} />
+              </Cartao>
+
+              <Cartao style={{ marginTop: 16 }}>
+                <Campo
+                  label="Local da auditoria"
+                  valor={localAuditoria}
+                  onChangeText={setLocalAuditoria}
+                  cores={cores}
+                  placeholder="Endereço onde a auditoria será realizada"
+                  multiline
+                />
+              </Cartao>
+
+              <Cartao style={{ marginTop: 16 }}>
+                <Text style={[styles.secaoTitulo, { color: cores.text, fontFamily: Fonts.bold }]}>
+                  Metas de sustentabilidade
+                </Text>
+                <Text style={[styles.secaoDesc, { color: cores.icon, fontFamily: Fonts.regular }]}>
+                  Conte quais metas ambientais sua empresa já persegue. Pelo menos uma é necessária.
+                </Text>
+
+                {metas.map((meta, indice) => (
+                  <View key={indice} style={[styles.metaBox, { borderColor: cores.border }]}>
+                    <View style={styles.chipsLinha}>
+                      {CATEGORIAS_META_SUGERIDAS.map((cat) => (
+                        <TouchableOpacity
+                          key={cat}
+                          onPress={() => handleAtualizarMeta(indice, 'categoria', cat)}
+                          style={[
+                            styles.chip,
+                            {
+                              borderColor: meta.categoria === cat ? cores.tint : cores.border,
+                              backgroundColor: meta.categoria === cat ? cores.tintSoft : 'transparent',
+                            },
+                          ]}>
+                          <Text
+                            style={[
+                              styles.chipTexto,
+                              { color: meta.categoria === cat ? cores.tint : cores.icon, fontFamily: Fonts.mono },
+                            ]}>
+                            {cat.toUpperCase()}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <Campo
+                      label="Descrição"
+                      valor={meta.descricao}
+                      onChangeText={(v) => handleAtualizarMeta(indice, 'descricao', v)}
+                      cores={cores}
+                      placeholder="Ex.: Reduzir consumo de água em 20%"
+                      multiline
+                    />
+                    <View style={styles.linhaDupla}>
+                      <View style={{ flex: 1 }}>
+                        <Campo
+                          label="Meta / número (opcional)"
+                          valor={meta.meta ?? ''}
+                          onChangeText={(v) => handleAtualizarMeta(indice, 'meta', v)}
+                          cores={cores}
+                          placeholder="Ex.: 20%"
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Campo
+                          label="Prazo (opcional)"
+                          valor={meta.prazo ?? ''}
+                          onChangeText={(v) => handleAtualizarMeta(indice, 'prazo', v)}
+                          cores={cores}
+                          placeholder="Ex.: 2027"
+                        />
+                      </View>
+                    </View>
+
+                    {metas.length > 1 && (
+                      <TouchableOpacity onPress={() => handleRemoverMeta(indice)} style={styles.removerMeta}>
+                        <Ionicons name="trash-outline" size={14} color={cores.danger} />
+                        <Text style={[styles.removerMetaTexto, { color: cores.danger, fontFamily: Fonts.mono }]}>
+                          REMOVER META
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+
+                <Botao titulo="Adicionar meta" variante="secundario" onPress={handleAdicionarMeta} style={{ marginTop: 6 }} />
+
+                {errosAuditoria.length > 0 && (
+                  <View style={{ marginTop: 14 }}>
+                    {errosAuditoria.map((msg, i) => (
+                      <Text key={i} style={[styles.erroTexto, { color: cores.danger, fontFamily: Fonts.regular }]}>
+                        {msg}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+              </Cartao>
+            </>
           ) : (
             <Cartao style={{ alignItems: 'center', paddingVertical: 40 }}>
               <Ionicons name="construct-outline" size={32} color={cores.icon} />
@@ -527,7 +695,11 @@ const styles = StyleSheet.create({
   documentoTopo: { flexDirection: 'row', alignItems: 'center' },
   documentoNome: { fontSize: 13 },
   documentoTamanho: { fontSize: 10, marginTop: 2 },
-  chipsLinha: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+  chipsLinha: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 },
   chip: { borderWidth: 1, borderRadius: Radius, paddingVertical: 5, paddingHorizontal: 8 },
   chipTexto: { fontSize: 9, letterSpacing: 0.4 },
+  dataSelecionada: { fontSize: 14, marginBottom: 10 },
+  metaBox: { borderWidth: 1, borderRadius: Radius, padding: 12, marginBottom: 12 },
+  removerMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 2 },
+  removerMetaTexto: { fontSize: 9, letterSpacing: 0.4 },
 });
