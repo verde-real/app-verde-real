@@ -30,6 +30,7 @@ import { alternarCurtida, buscarPostsCurtidosPorMim, buscarPostsPorAutor } from 
 import { contarSeguidores, contarSeguindo } from '@/src/services/seguidores';
 import { AtividadeDia, buscarAtividadeSemanal, contarCurtidasRecebidas, contarPublicacoes } from '@/src/services/estatisticas';
 import { enviarMidia } from '@/src/services/upload';
+import { ehEmpresa } from 'verde-real-core';
 import { Post } from '@/src/types';
 
 type Aba = 'publicacoes' | 'salvos' | 'curtidas';
@@ -364,7 +365,17 @@ export default function PerfilScreen() {
           ))
         )}
 
-        <Botao titulo="Sair da conta" onPress={handleSair} variante="perigo" style={{ marginTop: 24, marginHorizontal: 20 }} />
+                {ehEmpresa(usuario) && (
+          <Botao
+            titulo="Solicitar Selo"
+            onPress={() => router.push('/solicitar-selo' as any)}
+            variante="secundario"
+            style={{ marginTop: 24, marginHorizontal: 20 }}
+          />
+        )}
+
+        <Botao titulo="Sair da conta" onPress={handleSair} variante="perigo" style={{ marginTop: 12, marginHorizontal: 20 }} />
+
       </ScrollView>
     </SafeAreaView>
   );

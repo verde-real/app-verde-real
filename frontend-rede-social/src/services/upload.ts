@@ -54,7 +54,7 @@ function extensaoSegura(nomeArquivo: string | undefined | null, contentType: str
  * Ler o arquivo diretamente do sistema de arquivos evita essa camada de
  * rede e resolve o problema nas duas plataformas.
  */
-async function arquivoParaBytes(uri: string): Promise<Uint8Array> {
+export async function arquivoParaBytes(uri: string): Promise<Uint8Array> {
   try {
     const arquivo = new File(uri);
     return await arquivo.bytes();
