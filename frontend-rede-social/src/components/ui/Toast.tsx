@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useMemo, useState } from 'react';
+import { AccessibilityInfo, Animated, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Fonts, Marca, Radius } from '@/constants/theme';
@@ -34,12 +34,14 @@ const VISUAL: Record<TipoToast, { icone: keyof typeof Ionicons.glyphMap; cor: st
   info: { icone: 'information-circle', cor: '#1565c0', fundo: '#e3f2fd' },
 };
 
+// No web não existe driver nativo de animação
+const USAR_DRIVER_NATIVO = Platform.OS !== 'web';
 const ToastContext = createContext<ToastApi | null>(null);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const insets = useSafeAreaInsets();
   const [toast, setToast] = useState<ToastDados | null>(null);
-  const anim = useRef(new Animated.Value(0)).current;
+  const [anim] = useState(() => new Animated.Value(0));
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const esconder = useCallback(() => {
@@ -48,7 +50,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       toValue: 0,
       duration: 200,
       easing: Easing.in(Easing.ease),
-      useNativeDriver: true,
+      useNativeDriver: USAR_DRIVER_NATIVO,
     }).start(({ finished }) => {
       if (finished) setToast(null);
     });
@@ -63,7 +65,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         toValue: 1,
         duration: 250,
         easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
+        useNativeDriver: USAR_DRIVER_NATIVO,
       }).start();
       AccessibilityInfo.announceForAccessibility(opcoes?.titulo ? `${opcoes.titulo}. ${mensagem}` : mensagem);
       timer.current = setTimeout(esconder, opcoes?.duracao ?? (tipo === 'erro' ? 6000 : 4500));
@@ -95,10 +97,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       {toast && visual && (
         <Animated.View
-          pointerEvents="box-none"
           style={[
             styles.container,
             {
+              pointerEvents: 'box-none',
               top: insets.top + 12,
               opacity: anim,
               transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }],
@@ -157,11 +159,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderLeftWidth: 5,
     borderRadius: Radius,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
+    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.18)',
   },
   textos: { flex: 1 },
   titulo: { fontSize: 14, marginBottom: 2 },
