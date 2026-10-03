@@ -237,7 +237,7 @@ export default function SolicitarSeloFormScreen() {
   }
 
   function montarDadosCompletos(): DadosSolicitacaoSelo {
-    const plano = PLANOS_SELO.find((p) => p.id === planoSelecionado);
+    const plano = PLANOS_SELO.find((p: PlanoSelo) => p.id === planoSelecionado);
     const planoPagamento: DadosPlanoPagamento = {
       plano: plano?.nome ?? '',
       metodoPagamento: (metodoPagamento ?? '') as MetodoPagamentoSelo,
@@ -696,7 +696,7 @@ export default function SolicitarSeloFormScreen() {
             <>
               <Cartao>
                 <Text style={[styles.secaoTitulo, { color: cores.text, fontFamily: Fonts.bold }]}>Plano</Text>
-                {PLANOS_SELO.map((plano) => {
+                {PLANOS_SELO.map((plano: PlanoSelo) => {
                   const selecionado = plano.id === planoSelecionado;
                   return (
                     <TouchableOpacity
@@ -715,7 +715,7 @@ export default function SolicitarSeloFormScreen() {
                       <Text style={[styles.planoDesc, { color: cores.secondary, fontFamily: Fonts.regular }]}>
                         {plano.descricao}
                       </Text>
-                      {plano.recursos.map((rec, i) => (
+                      {plano.recursos.map((rec: string, i: number) => (
                         <View key={i} style={styles.planoRecursoLinha}>
                           <Ionicons name="checkmark" size={13} color={cores.tint} />
                           <Text style={[styles.planoRecursoTexto, { color: cores.secondary, fontFamily: Fonts.regular }]}>
