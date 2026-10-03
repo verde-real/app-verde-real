@@ -4,6 +4,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-naviga
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { ToastProvider } from '@/src/components/ui/Toast';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
@@ -38,24 +39,26 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="escolher-username" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="denuncia/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="empresa/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="usuario/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="seguindo" options={{ headerShown: false }} />
-          <Stack.Screen name="notificacoes" options={{ headerShown: false }} />
-          <Stack.Screen name="solicitar-selo" options={{ headerShown: false }} />
-          <Stack.Screen name="termos" options={{ headerShown: false }} />
-          <Stack.Screen name="redefinir-senha" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+      <ToastProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="escolher-username" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="denuncia/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="empresa/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="usuario/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="seguindo" options={{ headerShown: false }} />
+            <Stack.Screen name="notificacoes" options={{ headerShown: false }} />
+            <Stack.Screen name="solicitar-selo" options={{ headerShown: false }} />
+            <Stack.Screen name="termos" options={{ headerShown: false }} />
+            <Stack.Screen name="redefinir-senha" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </ToastProvider>
     </AuthProvider>
   );
 }

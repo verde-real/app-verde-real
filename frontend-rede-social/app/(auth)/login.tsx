@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useToast } from '@/src/components/ui/Toast';
 
 import { Emblema } from '@/src/components/ui/Emblema';
 import { Botao } from '@/src/components/ui/Botao';
@@ -27,6 +27,7 @@ type Aba = 'entrar' | 'cadastro' | 'recuperar';
 export default function LoginScreen() {
   const router = useRouter();
   const { entrar, cadastrar, recuperarSenha } = useAuth();
+  const toast = useToast();
 
   const [aba, setAba] = useState<Aba>('entrar');
   const [nome, setNome] = useState('');
@@ -40,19 +41,19 @@ export default function LoginScreen() {
   async function handleEnviar() {
     if (aba === 'recuperar') {
       if (!email.trim()) {
-        Alert.alert('Atenção', 'Informe seu e-mail.');
+        toast.aviso('Informe seu e-mail.');
         return;
       }
       setCarregando(true);
       try {
         await recuperarSenha(email.trim());
-        Alert.alert(
-          'Verifique seu email',
-          'Se este email estiver cadastrado, você vai receber um link para redefinir sua senha.'
-        );
+        toast.sucesso('Se este e-mail estiver cadastrado, você vai receber um link para redefinir sua senha.', {
+          titulo: 'Verifique seu e-mail',
+          duracao: 7000,
+        });
         setAba('entrar');
       } catch (error) {
-        Alert.alert('Ops', error instanceof Error ? error.message : 'Algo deu errado.');
+        toast.erro(error instanceof Error ? error.message : 'Algo deu errado.');
       } finally {
         setCarregando(false);
       }
@@ -60,7 +61,7 @@ export default function LoginScreen() {
     }
 
     if (!email.trim() || !senha.trim() || (aba === 'cadastro' && !nome.trim())) {
-      Alert.alert('Atenção', 'Preencha todos os campos!');
+      toast.aviso('Preencha todos os campos.');
       return;
     }
 
@@ -78,10 +79,10 @@ export default function LoginScreen() {
           aceitouTermos,
         });
         if (resultado.precisaConfirmarEmail) {
-          Alert.alert(
-            'Quase lá!',
-            'Enviamos um link de confirmação para o seu email. Confirme para poder entrar.'
-          );
+          toast.sucesso('Enviamos um link de confirmação para o seu e-mail. Confirme para poder entrar.', {
+            titulo: 'Quase lá!',
+            duracao: 7000,
+          });
           setAba('entrar');
           return;
         }
@@ -96,7 +97,7 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
       }
     } catch (error) {
-      Alert.alert('Ops', error instanceof Error ? error.message : 'Algo deu errado.');
+      toast.erro(error instanceof Error ? error.message : 'Algo deu errado.');
     } finally {
       setCarregando(false);
     }

@@ -1,9 +1,10 @@
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { avaliarSenha, mensagemSenhaInsegura } from 'verde-real-core';
+import { useToast } from '@/src/components/ui/Toast';
 
 import { Fonts, Marca, Radius } from '@/constants/theme';
 import { Botao } from '@/src/components/ui/Botao';
@@ -21,6 +22,7 @@ function lerTokens(url: string) {
 
 export default function RedefinirSenhaScreen() {
   const router = useRouter();
+  const toast = useToast();
   const url = Linking.useURL();
   const [estado, setEstado] = useState<Estado>('validando');
   const [senha, setSenha] = useState('');
@@ -53,21 +55,21 @@ export default function RedefinirSenhaScreen() {
   async function salvar() {
     const av = avaliarSenha(senha);
     if (!av.valida) {
-      Alert.alert('Atenção', mensagemSenhaInsegura(av));
+      toast.aviso(mensagemSenhaInsegura(av));
       return;
     }
     if (senha !== confirmar) {
-      Alert.alert('Atenção', 'As senhas não coincidem.');
+      toast.aviso('As senhas não coincidem.');
       return;
     }
     setSalvando(true);
     const { error } = await supabase.auth.updateUser({ password: senha });
     setSalvando(false);
     if (error) {
-      Alert.alert('Ops', error.message);
+      toast.erro(error.message);
       return;
     }
-    Alert.alert('Senha alterada', 'Entre com a sua nova senha.');
+    toast.sucesso('Entre com a sua nova senha.', { titulo: 'Senha alterada' });
     await irParaLogin();
   }
 
