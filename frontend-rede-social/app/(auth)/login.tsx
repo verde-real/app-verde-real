@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Emblema } from '@/src/components/ui/Emblema';
 import { Botao } from '@/src/components/ui/Botao';
+import { AvisoConfirmacao, CampoSenha, ChecklistSenha } from '@/src/components/ui/CampoSenha';
 import { Fonts, Marca, Radius } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
 
@@ -163,28 +164,16 @@ export default function LoginScreen() {
             {aba !== 'recuperar' && (
               <>
                 <Text style={[styles.rotulo, { fontFamily: Fonts.mono }]}>SENHA</Text>
-                <TextInput
-                  style={[styles.input, { fontFamily: Fonts.regular }]}
-                  placeholder="••••••••"
-                  placeholderTextColor={Marca.formIcon}
-                  value={senha}
-                  onChangeText={setSenha}
-                  secureTextEntry
-                />
+                <CampoSenha value={senha} onChangeText={setSenha} />
+                {aba === 'cadastro' && <ChecklistSenha senha={senha} />}
               </>
             )}
 
             {aba === 'cadastro' && (
               <>
                 <Text style={[styles.rotulo, { fontFamily: Fonts.mono }]}>CONFIRMAR SENHA</Text>
-                <TextInput
-                  style={[styles.input, { fontFamily: Fonts.regular }]}
-                  placeholder="••••••••"
-                  placeholderTextColor={Marca.formIcon}
-                  value={confirmarSenha}
-                  onChangeText={setConfirmarSenha}
-                  secureTextEntry
-                />
+                <CampoSenha value={confirmarSenha} onChangeText={setConfirmarSenha} />
+                <AvisoConfirmacao senha={senha} confirmar={confirmarSenha} />
 
                 <Text style={[styles.rotulo, { fontFamily: Fonts.mono }]}>TIPO DE CONTA</Text>
                 <View style={styles.tipoGrupo}>
@@ -232,7 +221,18 @@ export default function LoginScreen() {
                     color={aceitouTermos ? Marca.tint : Marca.formIcon}
                   />
                   <Text style={[styles.termosTexto, { fontFamily: Fonts.regular }]}>
-                    Li e aceito os termos de uso
+                    Li e aceito os{' '}
+                    <Text
+                      style={styles.link}
+                      onPress={() => router.push({ pathname: '/termos', params: { aba: 'termos' } })}>
+                      termos de uso
+                    </Text>{' '}
+                    e a{' '}
+                    <Text
+                      style={styles.link}
+                      onPress={() => router.push({ pathname: '/termos', params: { aba: 'privacidade' } })}>
+                      política de privacidade
+                    </Text>
                   </Text>
                 </TouchableOpacity>
               </>
@@ -309,4 +309,5 @@ const styles = StyleSheet.create({
   tipoTexto: { fontSize: 13 },
   termosLinha: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 4 },
   termosTexto: { fontSize: 13, color: Marca.formText, flexShrink: 1 },
+  link: { color: Marca.tint, textDecorationLine: 'underline' },
 });

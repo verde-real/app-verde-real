@@ -1,1 +1,5 @@
-{}
+{
+  "dependencies": {
+    "verde-real-core": "github:verde-real/verde-real-core"
+  }
+}

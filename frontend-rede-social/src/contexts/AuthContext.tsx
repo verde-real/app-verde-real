@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { DadosCadastro, validarCadastro } from 'verde-real-core';
+import * as Linking from 'expo-linking';
 
 import { supabase } from '@/src/services/supabase';
 import { Usuario } from '@/src/types';
@@ -120,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function recuperarSenha(email: string) {
     const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase().trim(), {
-      redirectTo: 'verde-real://redefinir-senha',
+      redirectTo: Linking.createURL('redefinir-senha'),
     });
     if (error) {
       throw new Error(error.message);
