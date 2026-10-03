@@ -17,6 +17,7 @@ import { PostCard } from '@/components/post-card';
 import { Colors, Fonts, Radius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useVoltarAoTopo } from '@/src/components/ui/BotaoVoltarTopo';
 import { CATEGORIAS } from '@/src/constants/categorias';
 import { alternarCurtida, buscarPosts } from '@/src/services/posts';
 import { contarNaoLidas, ouvirNovasNotificacoes } from '@/src/services/notificacoes';
@@ -28,6 +29,7 @@ export default function FeedScreen() {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
   const { usuario } = useAuth();
+  const topo = useVoltarAoTopo({ naBarraDeAbas: true });
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -232,6 +234,9 @@ export default function FeedScreen() {
         <ActivityIndicator size="large" color={cores.tint} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
+          ref={topo.ref}
+          onScroll={topo.aoRolar}
+          scrollEventThrottle={16}
           data={posts}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
@@ -252,6 +257,7 @@ export default function FeedScreen() {
           }
         />
       )}
+      {topo.botao}
     </SafeAreaView>
   );
 }

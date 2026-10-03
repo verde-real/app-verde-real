@@ -16,6 +16,7 @@ import { EstadoVazio } from '@/components/estado-vazio';
 import { Colors, Fonts } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useVoltarAoTopo } from '@/src/components/ui/BotaoVoltarTopo';
 import {
   buscarNotificacoes,
   marcarComoLida,
@@ -33,6 +34,7 @@ export default function NotificacoesScreen() {
   const cores = Colors[scheme];
   const router = useRouter();
   const { usuario } = useAuth();
+  const topo = useVoltarAoTopo();
 
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -117,6 +119,9 @@ export default function NotificacoesScreen() {
       ) : (
         <FlatList
           data={notificacoes}
+          ref={topo.ref}
+          onScroll={topo.aoRolar}
+          scrollEventThrottle={16}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingVertical: 8, flexGrow: 1 }}
           renderItem={({ item }) => (
@@ -149,6 +154,7 @@ export default function NotificacoesScreen() {
           }
         />
       )}
+      {topo.botao}
     </SafeAreaView>
   );
 }

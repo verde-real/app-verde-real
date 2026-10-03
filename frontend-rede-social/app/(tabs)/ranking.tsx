@@ -10,6 +10,7 @@ import { Colors, Fonts, Radius } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { rotuloConquista } from 'verde-real-core';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useVoltarAoTopo } from '@/src/components/ui/BotaoVoltarTopo';
 import { buscarRanking } from '@/src/services/ranking';
 import { RankingItem } from '@/src/types';
 
@@ -19,6 +20,7 @@ export default function RankingScreen() {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
   const { usuario } = useAuth();
+  const topo = useVoltarAoTopo({ naBarraDeAbas: true });
 
   const [lista, setLista] = useState<RankingItem[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -62,6 +64,9 @@ export default function RankingScreen() {
       ) : (
         <FlatList
           data={lista}
+          ref={topo.ref}
+          onScroll={topo.aoRolar}
+          scrollEventThrottle={16}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 15, flexGrow: 1 }}
           refreshing={atualizando}
@@ -131,6 +136,7 @@ export default function RankingScreen() {
           }
         />
       )}
+      {topo.botao}
     </SafeAreaView>
   );
 }

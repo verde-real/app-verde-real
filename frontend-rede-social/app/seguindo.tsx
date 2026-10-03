@@ -11,6 +11,7 @@ import { Cartao } from '@/src/components/ui/Cartao';
 import { Colors, Fonts } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useVoltarAoTopo } from '@/src/components/ui/BotaoVoltarTopo';
 import { buscarSeguindo } from '@/src/services/seguidores';
 
 /**
@@ -22,6 +23,7 @@ export default function SeguindoScreen() {
   const cores = Colors[scheme];
   const router = useRouter();
   const { usuario } = useAuth();
+  const topo = useVoltarAoTopo();
 
   const [lista, setLista] = useState<PerfilSeguido[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -66,6 +68,9 @@ export default function SeguindoScreen() {
       ) : (
         <FlatList
           data={lista}
+          ref={topo.ref}
+          onScroll={topo.aoRolar}
+          scrollEventThrottle={16}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 15, flexGrow: 1 }}
           renderItem={({ item }) => (
@@ -105,6 +110,7 @@ export default function SeguindoScreen() {
           }
         />
       )}
+      {topo.botao}
     </SafeAreaView>
   );
 }
