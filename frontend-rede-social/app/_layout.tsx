@@ -51,7 +51,7 @@ export default function RootLayout() {
             <Stack.Screen name="usuario/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="seguindo" options={{ headerShown: false }} />
             <Stack.Screen name="notificacoes" options={{ headerShown: false }} />
-            <Stack.Screen name="solicitar-selo" options={{ headerShown: false }} />
+            <Stack.Screen name="solicitar-selo-form" options={{ headerShown: false }} />
             <Stack.Screen name="termos" options={{ headerShown: false }} />
             <Stack.Screen name="redefinir-senha" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
