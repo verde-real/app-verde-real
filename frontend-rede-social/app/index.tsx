@@ -14,13 +14,28 @@ export default function Index() {
 
   if (carregando) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.background }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: cores.background,
+        }}
+      >
         <ActivityIndicator size="large" color={cores.tint} />
       </View>
     );
   }
 
   if (!usuario) return <Redirect href="/(auth)/login" />;
-  if (precisaEscolherUsername(usuario)) return <Redirect href="/escolher-username" />;
+
+  if (usuario.tipo === 'admin') {
+    return <Redirect href="/admin" />;
+  }
+
+  if (precisaEscolherUsername(usuario)) {
+    return <Redirect href="/escolher-username" />;
+  }
+
   return <Redirect href="/(tabs)" />;
 }
