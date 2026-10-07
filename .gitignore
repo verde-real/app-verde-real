@@ -2,3 +2,5 @@ node_modules/
 .expo/
 .env
 *.log
+verde-real-core-dev/
+web-verde-real/
