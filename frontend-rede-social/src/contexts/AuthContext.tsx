@@ -19,11 +19,11 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function mapearPerfil(perfil: any): Usuario {
+function mapearPerfil(perfil: any, email: string): Usuario {
   return {
     id: perfil.id,
     nome: perfil.nome,
-    email: perfil.email,
+    email,
     tipo: perfil.tipo,
     avatarUrl: perfil.avatar_url,
     username: perfil.username,
@@ -37,9 +37,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [carregando, setCarregando] = useState(true);
 
   async function carregarPerfil(userId: string) {
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const emailAuth = sessionData.session?.user?.email ?? '';
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, tipo, nome, avatar_url, username')
+      .eq('id', userId)
+      .single();
     if (error || !data) return null;
-    const u = mapearPerfil(data);
+    const u = mapearPerfil(data, emailAuth);
 
     const { data: resultadoAdmin, error: erroAdmin } =
       await supabase.rpc('eh_admin');

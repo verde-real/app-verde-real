@@ -11,12 +11,11 @@ export async function atualizarAvatar(usuarioId: string, avatarUrl: string) {
   return data;
 }
 export async function buscarPerfilPorId(id: string) {
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
+  const { data, error } = await supabase.from('profiles').select('id, nome, tipo, avatar_url, bio, username').eq('id', id).single();
   if (error || !data) return null;
   return {
     id: data.id,
     nome: data.nome,
-    email: data.email,
     tipo: data.tipo,
     avatarUrl: data.avatar_url,
     bio: data.bio,

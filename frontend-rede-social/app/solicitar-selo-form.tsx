@@ -174,9 +174,9 @@ export default function SolicitarSeloFormScreen() {
 
     (async () => {
       try {
-        const { data } = await supabase.from('profiles').select('telefone').eq('id', usuario.id).single();
-        if (data?.telefone) {
-          setDadosEmpresa((atual) => ({ ...atual, telefone: atual.telefone || formatarTelefone(data.telefone) }));
+        const { data } = await supabase.rpc('meu_telefone');
+        if (data) {
+          setDadosEmpresa((atual) => ({ ...atual, telefone: atual.telefone || formatarTelefone(data) }));
         }
       } catch {
         // Sugestão de preenchimento é best-effort; se falhar, o campo continua vazio e editável.
