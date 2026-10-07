@@ -8,7 +8,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/src/contexts/AuthContext';
 
 export default function Index() {
-  const { usuario, carregando } = useAuth();
+  const { usuario, ehAdmin, carregando } = useAuth();
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
   const cores = Colors[scheme];
 
@@ -31,8 +31,8 @@ export default function Index() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  // ADMIN PRECISA SER TESTADO ANTES DOS OUTROS TIPOS
-  if ((usuario as any).tipo === 'admin') {
+  // A autorização administrativa vem do banco, não do perfil do cliente.
+  if (ehAdmin) {
     return <Redirect href="/admin" />;
   }
 

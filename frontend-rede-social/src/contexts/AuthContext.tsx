@@ -8,6 +8,7 @@ import { Usuario } from '@/src/types';
 interface AuthContextValue {
   usuario: Usuario | null;
   token: string | null;
+  ehAdmin: boolean;
   carregando: boolean;
   entrar: (email: string, senha: string) => Promise<Usuario | null>;
   cadastrar: (dados: DadosCadastro) => Promise<{ precisaConfirmarEmail: boolean; usuario: Usuario | null }>;
@@ -32,12 +33,23 @@ function mapearPerfil(perfil: any): Usuario {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [ehAdmin, setEhAdmin] = useState(false);
   const [carregando, setCarregando] = useState(true);
 
   async function carregarPerfil(userId: string) {
     const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
     if (error || !data) return null;
     const u = mapearPerfil(data);
+
+    const { data: resultadoAdmin, error: erroAdmin } =
+      await supabase.rpc('eh_admin');
+
+    if (erroAdmin) {
+      setEhAdmin(false);
+    } else {
+      setEhAdmin(resultadoAdmin === true);
+    }
+
     setUsuario(u);
     return u;
   }
@@ -61,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setToken(null);
         setUsuario(null);
+        setEhAdmin(false);
       }
     });
 
@@ -132,6 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setUsuario(null);
     setToken(null);
+    setEhAdmin(false);
   }
 
   function atualizarUsuario(dadosParciais: Partial<Usuario>) {
@@ -139,8 +153,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const value = useMemo(
-    () => ({ usuario, token, carregando, entrar, cadastrar, recuperarSenha, sair, atualizarUsuario }),
-    [usuario, token, carregando]
+    () => ({
+      usuario,
+      token,
+      ehAdmin,
+      carregando,
+      entrar,
+      cadastrar,
+      recuperarSenha,
+      sair,
+      atualizarUsuario,
+    }),
+    [usuario, token, ehAdmin, carregando]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

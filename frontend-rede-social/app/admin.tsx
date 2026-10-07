@@ -40,7 +40,7 @@ type SeloPendente = {
 };
 
 export default function Admin() {
-  const { usuario, carregando, sair } = useAuth();
+  const { usuario, ehAdmin, carregando, sair } = useAuth();
   const servicoAdmin = criarServicoAdmin(supabase);
 
   const [posts, setPosts] = useState<PostPendente[]>([]);
@@ -75,10 +75,10 @@ export default function Admin() {
   }, []);
 
   useEffect(() => {
-    if (usuario?.tipo === 'admin') {
+    if (ehAdmin) {
       carregar();
     }
-  }, [usuario, carregar]);
+  }, [ehAdmin, carregar]);
 
   if (carregando) {
     return (
@@ -92,7 +92,7 @@ export default function Admin() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (usuario.tipo !== 'admin') {
+  if (!ehAdmin) {
     return <Redirect href="/(tabs)" />;
   }
 
