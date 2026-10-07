@@ -48,7 +48,7 @@
     "react-native-url-polyfill": "^4.0.0",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.1",
-    "verde-real-core": "github:verde-real/verde-real-core#c92617f"
+    "verde-real-core": "github:verde-real/verde-real-core#v0.1.1"
   },
   "devDependencies": {
     "@types/react": "~19.2.4",
