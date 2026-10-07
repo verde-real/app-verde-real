@@ -27,9 +27,12 @@ export default function Index() {
     );
   }
 
-  if (!usuario) return <Redirect href="/(auth)/login" />;
+  if (!usuario) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
-  if (usuario.tipo === 'admin') {
+  // ADMIN PRECISA SER TESTADO ANTES DOS OUTROS TIPOS
+  if ((usuario as any).tipo === 'admin') {
     return <Redirect href="/admin" />;
   }
 
