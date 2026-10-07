@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { Redirect, router } from 'expo-router';
+import { criarServicoAdmin } from 'verde-real-core';
 
 import { useAuth } from '@/src/contexts/AuthContext';
 import { supabase } from '@/src/services/supabase';
@@ -40,6 +41,7 @@ type SeloPendente = {
 
 export default function Admin() {
   const { usuario, carregando, sair } = useAuth();
+  const servicoAdmin = criarServicoAdmin(supabase);
 
   const [posts, setPosts] = useState<PostPendente[]>([]);
   const [selos, setSelos] = useState<SeloPendente[]>([]);
@@ -105,14 +107,13 @@ export default function Admin() {
       if (!motivo) return;
     }
 
-    const { error } = await supabase.rpc('admin_moderar_post', {
-      p_post_id: id,
-      p_acao: acao,
-      p_motivo: motivo,
-    });
-
-    if (error) {
-      Alert.alert('Erro', error.message);
+    try {
+      await servicoAdmin.moderarPost(id, acao, motivo);
+    } catch (error) {
+      Alert.alert(
+        'Erro',
+        error instanceof Error ? error.message : 'Não foi possível moderar o post.',
+      );
       return;
     }
 
@@ -168,7 +169,7 @@ export default function Admin() {
           },
           {
             text: 'Confirmar',
-            onPress: (texto) => resolve(texto?.trim() || null),
+            onPress: (texto?: string) => resolve(texto?.trim() || null),
           },
         ],
         'plain-text'
